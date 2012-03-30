@@ -24,10 +24,19 @@ func InitForm(form Form) {
 		}
 
 		name := typeOfForm.Field(i).Name
-		field.SetName(name)
-		field.SetLabel(name)
-		field.Widget().Attrs().Set("id", name)
-		field.Widget().Attrs().Set("name", name)
+		if field.Name() == "" {
+			field.SetName(name)
+		}
+		if field.Label() == "" {
+			field.SetLabel(name)
+		}
+		attrs := field.Widget().Attrs()
+		if _, ok := attrs.Get("id"); !ok {
+			attrs.Set("id", name)
+		}
+		if _, ok := attrs.Get("name"); !ok {
+			field.Widget().Attrs().Set("name", name)
+		}
 	}
 }
 
