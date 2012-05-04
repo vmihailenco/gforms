@@ -7,6 +7,10 @@ import (
 	tTemplate "text/template"
 )
 
+// ----------------------------------------------------------------------------
+// Widgets
+// ----------------------------------------------------------------------------
+
 type Widget interface {
 	Attrs() *WidgetAttrs
 	Render([]string, ...string) template.HTML
@@ -16,6 +20,10 @@ type ChoiceWidget interface {
 	Widget
 	SetChoices(choices [][2]string)
 }
+
+// ----------------------------------------------------------------------------
+// BaseWidget
+// ----------------------------------------------------------------------------
 
 type BaseWidget struct {
 	HTML  string
@@ -32,6 +40,10 @@ func (w *BaseWidget) Render(attrs []string, values ...string) template.HTML {
 	return template.HTML(html)
 }
 
+// ----------------------------------------------------------------------------
+// TextWidget
+// ----------------------------------------------------------------------------
+
 type TextWidget struct {
 	*BaseWidget
 }
@@ -46,6 +58,10 @@ func NewTextWidget() *TextWidget {
 		},
 	}
 }
+
+// ----------------------------------------------------------------------------
+// TextareaWidget
+// ----------------------------------------------------------------------------
 
 type TextareaWidget struct {
 	*BaseWidget
@@ -62,6 +78,10 @@ func NewTextareaWidget() *TextareaWidget {
 	}
 }
 
+// ----------------------------------------------------------------------------
+// CheckboxWidget
+// ----------------------------------------------------------------------------
+
 type CheckboxWidget struct {
 	*BaseWidget
 }
@@ -76,6 +96,10 @@ func NewCheckboxWidget() *CheckboxWidget {
 		},
 	}
 }
+
+// ----------------------------------------------------------------------------
+// SelectWidget
+// ----------------------------------------------------------------------------
 
 type SelectWidget struct {
 	*BaseWidget
@@ -132,6 +156,10 @@ func NewMultiSelectWidget() *SelectWidget {
 	}
 }
 
+// ----------------------------------------------------------------------------
+// RadioWidget
+// ----------------------------------------------------------------------------
+
 type RadioWidget struct {
 	*BaseWidget
 	choices [][2]string
@@ -181,4 +209,29 @@ func NewRadioWidget() *RadioWidget {
 			},
 		},
 	}
+}
+
+// ----------------------------------------------------------------------------
+// FileWidget
+// ----------------------------------------------------------------------------
+
+type FileWidget struct {
+	*BaseWidget
+}
+
+func NewFileWidget() *FileWidget {
+	return &FileWidget{
+		&BaseWidget{
+			HTML: `<input%v />`,
+			attrs: &WidgetAttrs{
+				attrs: [][2]string{{"type", "file"}},
+			},
+		},
+	}
+}
+
+func (w *FileWidget) Render(attrs []string, values ...string) template.HTML {
+	w.Attrs().FromSlice(attrs)
+	html := fmt.Sprintf(w.HTML, w.Attrs().String())
+	return template.HTML(html)
 }

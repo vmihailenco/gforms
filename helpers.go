@@ -61,8 +61,10 @@ func Render(field Field, attrs ...string) (template.HTML, error) {
 		"attrs": attrs,
 	}
 
+	bf := field.ToBaseField()
+
 	var t *template.Template
-	switch widget := field.Widget().(type) {
+	switch widget := bf.Widget.(type) {
 	case *CheckboxWidget:
 		t = CheckboxTemplate
 	case *RadioWidget:
@@ -85,10 +87,11 @@ func RenderError(fI interface{}) (template.HTML, error) {
 	if err != nil {
 		return emptyHTML, err
 	}
-	if !f.HasValidationError() {
+	bf := f.ToBaseField()
+	if bf.ValidationError == nil {
 		return emptyHTML, nil
 	}
-	error := fmt.Sprintf(`<span class="help-inline">%v</span>`, f.ValidationError())
+	error := fmt.Sprintf(`<span class="help-inline">%v</span>`, bf.ValidationError)
 	return template.HTML(error), nil
 }
 
@@ -97,7 +100,8 @@ func RenderLabel(fI interface{}) (template.HTML, error) {
 	if err != nil {
 		return emptyHTML, err
 	}
-	label := fmt.Sprintf(`<label class="control-label" for="%v">%v</label>`, f.Name(), f.Label())
+	bf := f.ToBaseField()
+	label := fmt.Sprintf(`<label class="control-label" for="%v">%v</label>`, bf.Name, bf.Label)
 	return template.HTML(label), nil
 }
 

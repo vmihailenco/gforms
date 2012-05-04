@@ -13,7 +13,7 @@ func TestRequiredStringFieldDoNotPassValidation(t *testing.T) {
 	}
 
 	expectedErr := "This field is required."
-	if err := f.ValidationError(); err.Error() != expectedErr {
+	if err := f.ValidationError; err.Error() != expectedErr {
 		t.Errorf("Expected %v, got %v.", expectedErr, err)
 	}
 
@@ -32,7 +32,7 @@ func TestRequiredStringFieldPassValidation(t *testing.T) {
 	f := NewStringField()
 
 	if !IsFieldValid(f, "foo") {
-		t.Errorf("Field did not pass validation: %v.", f.ValidationError())
+		t.Errorf("Field did not pass validation: %v.", f.ValidationError)
 	}
 
 	if v := f.Value(); v != "foo" {
@@ -47,10 +47,10 @@ func TestRequiredStringFieldPassValidation(t *testing.T) {
 
 func TestOptionalStringFieldPassValidation(t *testing.T) {
 	f := NewStringField()
-	f.SetIsRequired(false)
+	f.IsRequired = false
 
 	if !IsFieldValid(f, nil) {
-		t.Errorf("Field did not pass validation: %v.", f.ValidationError())
+		t.Errorf("Field did not pass validation: %v.", f.ValidationError)
 	}
 
 	expectedHTML := template.HTML(`<input type="text" value="" />`)
@@ -62,13 +62,13 @@ func TestOptionalStringFieldPassValidation(t *testing.T) {
 func TestSetName(t *testing.T) {
 	f := NewStringField()
 
-	f.SetName("foo")
-	if name := f.Name(); name != "foo" {
+	f.Name = "foo"
+	if name := f.Name; name != "foo" {
 		t.Errorf(`Expected "foo", got %v`, name)
 	}
 
-	f.SetLabel("fooLabel")
-	if label := f.Label(); label != "fooLabel" {
+	f.Label = "fooLabel"
+	if label := f.Label; label != "fooLabel" {
 		t.Errorf(`Expected "fooLabel", got %v`, label)
 	}
 
@@ -87,12 +87,12 @@ func TestSelectStringFieldValidation(t *testing.T) {
 	}
 
 	expectedErr := "x is not valid choice."
-	if err := f.ValidationError(); err.Error() != expectedErr {
+	if err := f.ValidationError; err.Error() != expectedErr {
 		t.Errorf(`Expected %v, got %v.`, expectedErr, err)
 	}
 
 	if !IsFieldValid(f, "foo") {
-		t.Errorf(`Field did not pass validation: %v.`, f.ValidationError())
+		t.Errorf(`Field did not pass validation: %v.`, f.ValidationError)
 	}
 
 	if v := f.Value(); v != "foo" {
@@ -109,12 +109,12 @@ func TestSelectInt64FieldValidation(t *testing.T) {
 	}
 
 	expectedErr := "0 is not valid choice."
-	if err := f.ValidationError(); err.Error() != expectedErr {
+	if err := f.ValidationError; err.Error() != expectedErr {
 		t.Errorf(`Expected %v, got %v.`, expectedErr, err)
 	}
 
 	if !IsFieldValid(f, 1) {
-		t.Errorf(`Field did not pass validation: %v.`, f.ValidationError())
+		t.Errorf(`Field did not pass validation: %v.`, f.ValidationError)
 	}
 
 	if v := f.Value(); v != 1 {
@@ -131,12 +131,12 @@ func TestMultiSelectStringFieldValidation(t *testing.T) {
 	}
 
 	expectedErr := "x is not valid choice."
-	if err := f.ValidationError(); err.Error() != expectedErr {
+	if err := f.ValidationError; err.Error() != expectedErr {
 		t.Errorf("Expected %v, got %v.", expectedErr, err)
 	}
 
 	if !IsFieldValid(f, []interface{}{"foo", "go"}) {
-		t.Errorf("Field did not pass validation: %v.", f.ValidationError())
+		t.Errorf("Field did not pass validation: %v.", f.ValidationError)
 	}
 
 	if v := f.Value(); len(v) != 2 || v[0] != "foo" || v[1] != "go" {
@@ -153,12 +153,12 @@ func TestMultiSelectInt64FieldValidation(t *testing.T) {
 	}
 
 	expectedErr := "0 is not valid choice."
-	if err := f.ValidationError(); err.Error() != expectedErr {
+	if err := f.ValidationError; err.Error() != expectedErr {
 		t.Errorf("Expected %v, got %v.", expectedErr, err)
 	}
 
 	if !IsFieldValid(f, []interface{}{1, 2}) {
-		t.Errorf("Field did not pass validation: %v.", f.ValidationError())
+		t.Errorf("Field did not pass validation: %v.", f.ValidationError)
 	}
 
 	if v := f.Value(); len(v) != 2 || v[0] != 1 || v[1] != 2 {

@@ -19,11 +19,18 @@ func TestFormUsage(t *testing.T) {
 	}
 	InitForm(f)
 
-	data := map[string][]interface{}{
-		"Name": []interface{}{"foo"},
-		"Age":  []interface{}{"23"},
+	valueGetter := func(f Field) interface{} {
+		bf := f.ToBaseField()
+		switch bf.Name {
+		case "Name":
+			return "foo"
+		case "Age":
+			return "23"
+		}
+		return "missing"
 	}
-	if !IsValid(f, data) {
+
+	if !IsValid(f, valueGetter) {
 		t.Errorf("Form did not pass validation: %v.", f.Errors())
 	}
 
