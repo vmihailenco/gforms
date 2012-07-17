@@ -1,13 +1,20 @@
-package gforms
+package gforms_test
 
 import (
 	"html/template"
-	"testing"
+
+	. "launchpad.net/gocheck"
+
+	"github.com/vmihailenco/gforms"
 )
 
-func TestWidgets(t *testing.T) {
-	textWidget := NewTextWidget()
-	checkboxWidget := NewCheckboxWidget()
+type WidgetsTest struct{}
+
+var _ = Suite(&WidgetsTest{})
+
+func (t *WidgetsTest) TestWidgets(c *C) {
+	textWidget := gforms.NewTextWidget()
+	checkboxWidget := gforms.NewCheckboxWidget()
 
 	var widgetTests = []struct {
 		given, expected template.HTML
@@ -27,8 +34,6 @@ func TestWidgets(t *testing.T) {
 	}
 
 	for _, tt := range widgetTests {
-		if tt.given != tt.expected {
-			t.Errorf("got %v, but expected %v", tt.given, tt.expected)
-		}
+		c.Check(tt.given, Equals, tt.expected)
 	}
 }

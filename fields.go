@@ -24,6 +24,7 @@ type Field interface {
 
 func IsFieldValid(field Field, rawValue interface{}) bool {
 	bf := field.ToBaseField()
+	bf.ValidationError = nil
 
 	if rawValue == nil {
 		if bf.IsRequired {

@@ -77,6 +77,7 @@ func NewBlobField() *BlobField {
 		BaseField: &gforms.BaseField{
 			Widget:      gforms.NewFileWidget(),
 			IsMultipart: true,
+			IsRequired:  true,
 		},
 	}
 }

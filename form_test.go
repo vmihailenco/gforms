@@ -1,25 +1,41 @@
-package gforms
+package gforms_test
 
 import (
 	"html/template"
-	"testing"
+
+	. "launchpad.net/gocheck"
+
+	"github.com/vmihailenco/gforms"
 )
 
+type FormTest struct{}
+
+var _ = Suite(&FormTest{})
+
+//------------------------------------------------------------------------------
+
 type TestForm struct {
-	*BaseForm
-	Name *StringField
-	Age  *Int64Field
+	*gforms.BaseForm
+	Name *gforms.StringField
+	Age  *gforms.Int64Field
 }
 
-func TestFormUsage(t *testing.T) {
+func NewTestForm() *TestForm {
 	f := &TestForm{
-		BaseForm: &BaseForm{},
-		Name:     NewStringField(),
-		Age:      NewInt64Field(),
+		BaseForm: &gforms.BaseForm{},
+		Name:     gforms.NewStringField(),
+		Age:      gforms.NewInt64Field(),
 	}
-	InitForm(f)
+	gforms.InitForm(f)
+	return f
+}
 
-	valueGetter := func(f Field) interface{} {
+//------------------------------------------------------------------------------
+
+func (t *TestForm) TestFormUsage(c *C) {
+	f := NewTestForm()
+
+	valueGetter := func(f gforms.Field) interface{} {
 		bf := f.ToBaseField()
 		switch bf.Name {
 		case "Name":
@@ -27,26 +43,22 @@ func TestFormUsage(t *testing.T) {
 		case "Age":
 			return "23"
 		}
-		return "missing"
+		panic("unreachable")
 	}
 
-	if !IsValid(f, valueGetter) {
-		t.Errorf("Form did not pass validation: %v.", f.Errors())
-	}
+	c.Check(gforms.IsValid(f, valueGetter), Equals, false)
 
-	if v := f.Name.Value(); v != "foo" {
-		t.Errorf("Expected foo, got %v.", v)
-	}
-	expectedHTML := template.HTML(`<input type="text" id="Name" name="Name" value="foo" />`)
-	if html := f.Name.Render(); html != expectedHTML {
-		t.Errorf("Expected %v, got %v.", expectedHTML, html)
-	}
+	c.Check(f.Name.Value(), Equals, "foo")
+	c.Check(
+		f.Name.Render(),
+		Equals,
+		template.HTML(`<input type="text" id="Name" name="Name" value="foo" />`),
+	)
 
-	if v := f.Age.Value(); v != 23 {
-		t.Errorf("Expected 23, got %v.", v)
-	}
-	expectedHTML = template.HTML(`<input type="text" id="Age" name="Age" value="23" />`)
-	if html := f.Age.Render(); html != expectedHTML {
-		t.Errorf("Expected %v, got %v.", expectedHTML, html)
-	}
+	c.Check(f.Age.Value(), Equals, 23)
+	c.Check(
+		f.Age.Render(),
+		Equals,
+		template.HTML(`<input type="text" id="Age" name="Age" value="23" />`),
+	)
 }

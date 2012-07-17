@@ -1,167 +1,113 @@
-package gforms
+package gforms_test
 
 import (
 	"html/template"
-	"testing"
+
+	. "launchpad.net/gocheck"
+
+	"github.com/vmihailenco/gforms"
 )
 
-func TestRequiredStringFieldDoNotPassValidation(t *testing.T) {
-	f := NewStringField()
+type FieldsTest struct{}
 
-	if IsFieldValid(f, nil) {
-		t.Errorf("Field passed validation.")
-	}
+var _ = Suite(&FieldsTest{})
 
-	expectedErr := "This field is required."
-	if err := f.ValidationError; err.Error() != expectedErr {
-		t.Errorf("Expected %v, got %v.", expectedErr, err)
-	}
+func (t *FieldsTest) TestRequiredStringFieldDoNotPassValidation(c *C) {
+	f := gforms.NewStringField()
 
-	expectedV := ""
-	if v := f.Value(); v != expectedV {
-		t.Errorf("Expected %v, got %v.", expectedV, v)
-	}
-
-	expectedHTML := template.HTML(`<input type="text" value="" />`)
-	if html := f.Render(); html != expectedHTML {
-		t.Errorf("Expected %v, got %v.", expectedHTML, html)
-	}
+	c.Check(gforms.IsFieldValid(f, nil), Equals, false)
+	c.Check(f.ValidationError.Error(), Equals, "This field is required.")
+	c.Check(f.Value(), Equals, "")
+	c.Check(f.Render(), Equals, template.HTML(`<input type="text" value="" />`))
 }
 
-func TestRequiredStringFieldPassValidation(t *testing.T) {
-	f := NewStringField()
+func (t *FieldsTest) TestRequiredStringFieldPassValidation(c *C) {
+	f := gforms.NewStringField()
 
-	if !IsFieldValid(f, "foo") {
-		t.Errorf("Field did not pass validation: %v.", f.ValidationError)
-	}
-
-	if v := f.Value(); v != "foo" {
-		t.Errorf("Expected foo, got %v", v)
-	}
-
-	expectedHTML := template.HTML(`<input type="text" value="foo" />`)
-	if html := f.Render(); html != expectedHTML {
-		t.Errorf("Expected %v, got %v.", expectedHTML, html)
-	}
+	c.Check(gforms.IsFieldValid(f, "foo"), Equals, true)
+	c.Check(f.ValidationError, IsNil)
+	c.Check(f.Value(), Equals, "foo")
+	c.Check(f.Render(), Equals, template.HTML(`<input type="text" value="foo" />`))
 }
 
-func TestOptionalStringFieldPassValidation(t *testing.T) {
-	f := NewStringField()
+func (t *FieldsTest) TestOptionalStringFieldPassValidation(c *C) {
+	f := gforms.NewStringField()
 	f.IsRequired = false
 
-	if !IsFieldValid(f, nil) {
-		t.Errorf("Field did not pass validation: %v.", f.ValidationError)
-	}
-
-	expectedHTML := template.HTML(`<input type="text" value="" />`)
-	if html := f.Render(); html != expectedHTML {
-		t.Errorf("Expected %v, got %v.", expectedHTML, html)
-	}
+	c.Check(gforms.IsFieldValid(f, nil), Equals, true)
+	c.Check(f.ValidationError, IsNil)
+	c.Check(f.Value(), Equals, "")
+	c.Check(f.Render(), Equals, template.HTML(`<input type="text" value="" />`))
 }
 
-func TestSetName(t *testing.T) {
-	f := NewStringField()
-
+func (t *FieldsTest) TestSetName(c *C) {
+	f := gforms.NewStringField()
 	f.Name = "foo"
-	if name := f.Name; name != "foo" {
-		t.Errorf(`Expected "foo", got %v`, name)
-	}
-
 	f.Label = "fooLabel"
-	if label := f.Label; label != "fooLabel" {
-		t.Errorf(`Expected "fooLabel", got %v`, label)
-	}
 
-	expectedHTML := template.HTML(`<input type="text" value="" />`)
-	if html := f.Render(); html != expectedHTML {
-		t.Errorf("Expected %v, got %v.", expectedHTML, html)
-	}
+	c.Check(f.Render(), Equals, template.HTML(`<input type="text" value="" />`))
 }
 
-func TestSelectStringFieldValidation(t *testing.T) {
-	f := NewSelectStringField()
-	f.SetChoices([]StringChoice{{"foo", "bar"}})
+//------------------------------------------------------------------------------
 
-	if IsFieldValid(f, "x") {
-		t.Errorf("Field passed validation.")
-	}
+func (t *FieldsTest) TestSelectStringFieldValidation(c *C) {
+	f := gforms.NewSelectStringField()
+	f.SetChoices([]gforms.StringChoice{{"foo", "bar"}})
 
-	expectedErr := "x is not valid choice."
-	if err := f.ValidationError; err.Error() != expectedErr {
-		t.Errorf(`Expected %v, got %v.`, expectedErr, err)
-	}
+	c.Check(gforms.IsFieldValid(f, "x"), Equals, false)
+	c.Check(f.ValidationError.Error(), Equals, "x is not valid choice.")
+	c.Check(f.Value(), Equals, "")
 
-	if !IsFieldValid(f, "foo") {
-		t.Errorf(`Field did not pass validation: %v.`, f.ValidationError)
-	}
-
-	if v := f.Value(); v != "foo" {
-		t.Errorf(`Expected "foo", got %v.`, v)
-	}
+	c.Check(gforms.IsFieldValid(f, "foo"), Equals, true)
+	c.Check(f.ValidationError, IsNil)
+	c.Check(f.Value(), Equals, "foo")
 }
 
-func TestSelectInt64FieldValidation(t *testing.T) {
-	f := NewSelectInt64Field()
-	f.SetChoices([]Int64Choice{{1, "foo"}})
+func (t *FieldsTest) TestSelectInt64FieldValidation(c *C) {
+	f := gforms.NewSelectInt64Field()
+	f.SetChoices([]gforms.Int64Choice{{1, "foo"}})
 
-	if IsFieldValid(f, 0) {
-		t.Errorf("Field passed validation.")
-	}
+	c.Check(gforms.IsFieldValid(f, 0), Equals, false)
+	c.Check(f.ValidationError.Error(), Equals, "0 is not valid choice.")
+	c.Check(f.Value(), Equals, int64(0))
 
-	expectedErr := "0 is not valid choice."
-	if err := f.ValidationError; err.Error() != expectedErr {
-		t.Errorf(`Expected %v, got %v.`, expectedErr, err)
-	}
-
-	if !IsFieldValid(f, 1) {
-		t.Errorf(`Field did not pass validation: %v.`, f.ValidationError)
-	}
-
-	if v := f.Value(); v != 1 {
-		t.Errorf(`Expected 1, got %v.`, v)
-	}
+	c.Check(gforms.IsFieldValid(f, 1), Equals, true)
+	c.Check(f.ValidationError, IsNil)
+	c.Check(f.Value(), Equals, int64(1))
 }
 
-func TestMultiSelectStringFieldValidation(t *testing.T) {
-	f := NewMultiSelectStringField()
-	f.SetChoices([]StringChoice{{"foo", "bar"}, {"go", "Golang"}})
+//------------------------------------------------------------------------------
 
-	if IsFieldValid(f, []interface{}{"x"}) {
-		t.Errorf("Field passed validation.")
-	}
+func (t *FieldsTest) TestMultiSelectStringFieldValidation(c *C) {
+	f := gforms.NewMultiSelectStringField()
+	f.SetChoices([]gforms.StringChoice{{"foo", "bar"}, {"go", "Golang"}})
 
-	expectedErr := "x is not valid choice."
-	if err := f.ValidationError; err.Error() != expectedErr {
-		t.Errorf("Expected %v, got %v.", expectedErr, err)
-	}
+	c.Check(gforms.IsFieldValid(f, []interface{}{"x"}), Equals, false)
+	c.Check(f.ValidationError.Error(), Equals, "x is not valid choice.")
+	c.Check(f.Value(), IsNil)
 
-	if !IsFieldValid(f, []interface{}{"foo", "go"}) {
-		t.Errorf("Field did not pass validation: %v.", f.ValidationError)
-	}
+	c.Check(gforms.IsFieldValid(f, []interface{}{"foo"}), Equals, true)
+	c.Check(f.ValidationError, IsNil)
+	c.Check(f.Value(), DeepEquals, []string{"foo"})
 
-	if v := f.Value(); len(v) != 2 || v[0] != "foo" || v[1] != "go" {
-		t.Errorf(`Expected {"foo", "bar"}, got %v.`, v)
-	}
+	c.Check(gforms.IsFieldValid(f, []interface{}{"foo", "go"}), Equals, true)
+	c.Check(f.ValidationError, IsNil)
+	c.Check(f.Value(), DeepEquals, []string{"foo", "go"})
 }
 
-func TestMultiSelectInt64FieldValidation(t *testing.T) {
-	f := NewMultiSelectInt64Field()
-	f.SetChoices([]Int64Choice{{1, "bar"}, {2, "Golang"}})
+func (t *FieldsTest) TestMultiSelectInt64FieldValidation(c *C) {
+	f := gforms.NewMultiSelectInt64Field()
+	f.SetChoices([]gforms.Int64Choice{{1, "bar"}, {2, "Golang"}})
 
-	if IsFieldValid(f, []interface{}{0}) {
-		t.Errorf("Field passed validation.")
-	}
+	c.Check(gforms.IsFieldValid(f, []interface{}{0}), Equals, false)
+	c.Check(f.ValidationError.Error(), Equals, "0 is not valid choice.")
+	c.Check(f.Value(), IsNil)
 
-	expectedErr := "0 is not valid choice."
-	if err := f.ValidationError; err.Error() != expectedErr {
-		t.Errorf("Expected %v, got %v.", expectedErr, err)
-	}
+	c.Check(gforms.IsFieldValid(f, []interface{}{1}), Equals, true)
+	c.Check(f.ValidationError, IsNil)
+	c.Check(f.Value(), DeepEquals, []int64{1})
 
-	if !IsFieldValid(f, []interface{}{1, 2}) {
-		t.Errorf("Field did not pass validation: %v.", f.ValidationError)
-	}
-
-	if v := f.Value(); len(v) != 2 || v[0] != 1 || v[1] != 2 {
-		t.Errorf(`Expected {1, 2}, got %v.`, v)
-	}
+	c.Check(gforms.IsFieldValid(f, []interface{}{1, 2}), Equals, true)
+	c.Check(f.ValidationError, IsNil)
+	c.Check(f.Value(), DeepEquals, []int64{1, 2})
 }

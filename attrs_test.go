@@ -1,31 +1,37 @@
-package gforms
+package gforms_test
 
 import (
-	"testing"
+	. "launchpad.net/gocheck"
+
+	"github.com/vmihailenco/gforms"
 )
 
-func TestAttrs(t *testing.T) {
-	attrs := &WidgetAttrs{}
+type AttrsTest struct{}
+
+var _ = Suite(&AttrsTest{})
+
+func (t *AttrsTest) TestAttrs(c *C) {
+	attrs := &gforms.WidgetAttrs{}
 
 	attrs.Set("foo", "bar")
-	if v, flag := attrs.Get("foo"); v != "bar" || flag != true {
-		t.Errorf("Got (%v, %v), expected (bar, true).", v, flag)
-	}
+	v, exists := attrs.Get("foo")
+	c.Check(exists, Equals, true)
+	c.Check(v, Equals, "bar")
 
 	attrs.Set("foo", "bar2")
-	if v, flag := attrs.Get("foo"); v != "bar2" || flag != true {
-		t.Errorf("Got (%v, %v), expected (bar2, true).", v, flag)
-	}
+	v, exists = attrs.Get("foo")
+	c.Check(exists, Equals, true)
+	c.Check(v, Equals, "bar2")
 
-	if v, flag := attrs.Pop("foo"); v != "bar2" || flag != true {
-		t.Errorf("Got (%v, %v), expected (bar2, true).", v, flag)
-	}
+	v, exists = attrs.Pop("foo")
+	c.Check(exists, Equals, true)
+	c.Check(v, Equals, "bar2")
 
-	if v, flag := attrs.Pop("foo"); v != "" || flag != false {
-		t.Errorf(`Got (%v, %v), expected ("", false).`, v, flag)
-	}
+	v, exists = attrs.Pop("foo")
+	c.Check(exists, Equals, false)
+	c.Check(v, Equals, "")
 
-	if v, flag := attrs.Get("foo"); v != "" || flag != false {
-		t.Errorf(`Got (%v, %v), expected ("", false).`, v, flag)
-	}
+	v, exists = attrs.Get("foo")
+	c.Check(exists, Equals, false)
+	c.Check(v, Equals, "")
 }
