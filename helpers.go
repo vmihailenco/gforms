@@ -5,19 +5,20 @@ import (
 	"errors"
 	"fmt"
 	"html/template"
+	"path"
 )
 
 var WidgetTemplate, CheckboxTemplate, RadioTemplate *template.Template
 var emptyHTML = template.HTML("")
 
-func newTemplate(path string) (*template.Template, error) {
-	t := template.New(path)
+func newTemplate(filepath string) (*template.Template, error) {
+	t := template.New(path.Base(filepath))
 	t = t.Funcs(template.FuncMap{
 		"renderField": RenderField,
 		"renderLabel": RenderLabel,
 		"renderError": RenderError,
 	})
-	return t.ParseFiles(path)
+	return t.ParseFiles(filepath)
 }
 
 func init() {
