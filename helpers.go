@@ -10,38 +10,30 @@ import (
 var WidgetTemplate, CheckboxTemplate, RadioTemplate *template.Template
 var emptyHTML = template.HTML("")
 
+func newTemplate(path string) (*template.Template, error) {
+	t := template.New(path)
+	t = t.Funcs(template.FuncMap{
+		"renderField": RenderField,
+		"renderLabel": RenderLabel,
+		"renderError": RenderError,
+	})
+	return t.ParseFiles(path)
+}
+
 func init() {
 	var err error
 
-	WidgetTemplate = template.New("widget.html")
-	WidgetTemplate = WidgetTemplate.Funcs(template.FuncMap{
-		"renderField": RenderField,
-		"renderLabel": RenderLabel,
-		"renderError": RenderError,
-	})
-	WidgetTemplate, err = WidgetTemplate.ParseFiles("templates/gforms/widget.html")
+	WidgetTemplate, err = newTemplate("templates/gforms/widget.html")
 	if err != nil {
 		panic(err)
 	}
 
-	CheckboxTemplate = template.New("checkbox.html")
-	CheckboxTemplate = CheckboxTemplate.Funcs(template.FuncMap{
-		"renderField": RenderField,
-		"renderLabel": RenderLabel,
-		"renderError": RenderError,
-	})
-	CheckboxTemplate, err = CheckboxTemplate.ParseFiles("templates/gforms/checkbox.html")
+	CheckboxTemplate, err = newTemplate("templates/gforms/checkbox.html")
 	if err != nil {
 		panic(err)
 	}
 
-	RadioTemplate = template.New("radio.html")
-	RadioTemplate = RadioTemplate.Funcs(template.FuncMap{
-		"renderField": RenderField,
-		"renderLabel": RenderLabel,
-		"renderError": RenderError,
-	})
-	RadioTemplate, err = RadioTemplate.ParseFiles("templates/gforms/radio.html")
+	RadioTemplate, err = newTemplate("templates/gforms/radio.html")
 	if err != nil {
 		panic(err)
 	}
@@ -50,7 +42,7 @@ func init() {
 func field(fIntrfc interface{}) (Field, error) {
 	f, ok := fIntrfc.(Field)
 	if !ok {
-		return nil, errors.New("Expected Field")
+		return nil, errors.New("gforms: expected Field")
 	}
 	return f, nil
 }

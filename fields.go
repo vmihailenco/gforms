@@ -8,9 +8,7 @@ import (
 	"strconv"
 )
 
-// ----------------------------------------------------------------------------
-// Field
-// ----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 
 type Field interface {
 	Validator
@@ -28,7 +26,7 @@ func IsFieldValid(field Field, rawValue interface{}) bool {
 
 	if rawValue == nil {
 		if bf.IsRequired {
-			bf.ValidationError = errors.New("This field is required.")
+			bf.ValidationError = errors.New("This field is required")
 			return false
 		} else {
 			return true
@@ -51,9 +49,7 @@ type MultiValueField interface {
 	StringValue() []string
 }
 
-// ----------------------------------------------------------------------------
-// BaseField
-// ----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 
 type BaseField struct {
 	Name   string
@@ -109,9 +105,7 @@ func (f *BaseField) ToBaseField() *BaseField {
 	return f
 }
 
-// ----------------------------------------------------------------------------
-// StringField
-// ----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 
 type StringField struct {
 	*BaseField
@@ -130,10 +124,10 @@ func (f *StringField) Validate(rawValue interface{}) error {
 
 	valueLen := len(value)
 	if f.MinLen > 0 && valueLen < f.MinLen {
-		return fmt.Errorf("This field should have at least %d symbols.", f.MinLen)
+		return fmt.Errorf("This field should have at least %d symbols", f.MinLen)
 	}
 	if f.MaxLen > 0 && valueLen > f.MaxLen {
-		return fmt.Errorf("This field should have less than %d symbols.", f.MaxLen)
+		return fmt.Errorf("This field should have less than %d symbols", f.MaxLen)
 	}
 
 	if err := f.ApplyValidators(value); err != nil {
@@ -170,9 +164,7 @@ func NewTextareaStringField() *StringField {
 	}
 }
 
-// ----------------------------------------------------------------------------
-// StringChoiceField
-// ----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 
 type StringChoice struct {
 	Value string
@@ -261,9 +253,7 @@ func NewInt64Field() *Int64Field {
 	}
 }
 
-// ----------------------------------------------------------------------------
-// Int64ChoiceField
-// ----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 
 type Int64ChoiceField struct {
 	*Int64Field
@@ -307,9 +297,7 @@ func NewRadioInt64Field() *Int64ChoiceField {
 	}
 }
 
-// ----------------------------------------------------------------------------
-// BoolField
-// ----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 
 type BoolField struct {
 	*BaseField
@@ -353,9 +341,7 @@ func NewBoolField() *BoolField {
 	}
 }
 
-// ----------------------------------------------------------------------------
-// MultiStringChoiceField
-// ----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 
 type MultiStringChoiceField struct {
 	*StringChoiceField
@@ -371,7 +357,7 @@ func (f *MultiStringChoiceField) Value() []string {
 func (f *MultiStringChoiceField) Validate(rawValue interface{}) error {
 	valuesI, ok := rawValue.([]interface{})
 	if !ok {
-		return fmt.Errorf("Type %T is not supported.", rawValue)
+		return fmt.Errorf("Type %T is not supported", rawValue)
 	}
 
 	values := make([]string, 0)
@@ -415,9 +401,7 @@ func NewMultiSelectStringField() *MultiStringChoiceField {
 	}
 }
 
-// ----------------------------------------------------------------------------
-// MultiInt64ChoiceField
-// ----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 
 type MultiInt64ChoiceField struct {
 	*Int64ChoiceField
@@ -433,7 +417,7 @@ func (f *MultiInt64ChoiceField) Value() []int64 {
 func (f *MultiInt64ChoiceField) Validate(rawValue interface{}) error {
 	valuesI, ok := rawValue.([]interface{})
 	if !ok {
-		return fmt.Errorf("Type %T is not supported.", rawValue)
+		return fmt.Errorf("Type %T is not supported", rawValue)
 	}
 
 	values := make([]int64, 0)
@@ -485,9 +469,7 @@ func NewMultiSelectInt64Field() *MultiInt64ChoiceField {
 	}
 }
 
-// ----------------------------------------------------------------------------
-// FileField
-// ----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 
 type FileField struct {
 	*BaseField
@@ -503,7 +485,7 @@ func (f *FileField) Value() *multipart.FileHeader {
 func (f *FileField) Validate(rawValue interface{}) error {
 	value, ok := rawValue.(*multipart.FileHeader)
 	if !ok {
-		return fmt.Errorf("Type %T is not supported.", rawValue)
+		return fmt.Errorf("Type %T is not supported", rawValue)
 	}
 
 	if err := f.ApplyValidators(value); err != nil {

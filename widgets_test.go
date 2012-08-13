@@ -34,6 +34,6 @@ func (t *WidgetsTest) TestWidgets(c *C) {
 	}
 
 	for _, tt := range widgetTests {
-		c.Check(tt.given, Equals, tt.expected)
+		c.Assert(tt.given, Equals, tt.expected)
 	}
 }

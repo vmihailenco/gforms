@@ -46,17 +46,17 @@ func (t *TestForm) TestFormUsage(c *C) {
 		panic("unreachable")
 	}
 
-	c.Check(gforms.IsValid(f, valueGetter), Equals, false)
+	c.Assert(gforms.IsValid(f, valueGetter), Equals, false)
 
-	c.Check(f.Name.Value(), Equals, "foo")
-	c.Check(
+	c.Assert(f.Name.Value(), Equals, "foo")
+	c.Assert(
 		f.Name.Render(),
 		Equals,
 		template.HTML(`<input type="text" id="Name" name="Name" value="foo" />`),
 	)
 
-	c.Check(f.Age.Value(), Equals, 23)
-	c.Check(
+	c.Assert(f.Age.Value(), Equals, 23)
+	c.Assert(
 		f.Age.Render(),
 		Equals,
 		template.HTML(`<input type="text" id="Age" name="Age" value="23" />`),

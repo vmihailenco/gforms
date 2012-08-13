@@ -15,23 +15,23 @@ func (t *AttrsTest) TestAttrs(c *C) {
 
 	attrs.Set("foo", "bar")
 	v, exists := attrs.Get("foo")
-	c.Check(exists, Equals, true)
-	c.Check(v, Equals, "bar")
+	c.Assert(exists, Equals, true)
+	c.Assert(v, Equals, "bar")
 
 	attrs.Set("foo", "bar2")
 	v, exists = attrs.Get("foo")
-	c.Check(exists, Equals, true)
-	c.Check(v, Equals, "bar2")
+	c.Assert(exists, Equals, true)
+	c.Assert(v, Equals, "bar2")
 
 	v, exists = attrs.Pop("foo")
-	c.Check(exists, Equals, true)
-	c.Check(v, Equals, "bar2")
+	c.Assert(exists, Equals, true)
+	c.Assert(v, Equals, "bar2")
 
 	v, exists = attrs.Pop("foo")
-	c.Check(exists, Equals, false)
-	c.Check(v, Equals, "")
+	c.Assert(exists, Equals, false)
+	c.Assert(v, Equals, "")
 
 	v, exists = attrs.Get("foo")
-	c.Check(exists, Equals, false)
-	c.Check(v, Equals, "")
+	c.Assert(exists, Equals, false)
+	c.Assert(v, Equals, "")
 }
