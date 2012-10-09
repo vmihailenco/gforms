@@ -8,36 +8,69 @@ import (
 
 //------------------------------------------------------------------------------
 
+func init() {
+	Register((*StringField)(nil), func() interface{} {
+		return NewStringField()
+	})
+	Register((*StringChoiceField)(nil), func() interface{} {
+		return NewSelectStringField()
+	})
+	Register((*Int64Field)(nil), func() interface{} {
+		return NewInt64Field()
+	})
+	Register((*Int64ChoiceField)(nil), func() interface{} {
+		return NewSelectInt64Field()
+	})
+	Register((*BoolField)(nil), func() interface{} {
+		return NewBoolField()
+	})
+	Register((*MultiStringChoiceField)(nil), func() interface{} {
+		return NewMultiSelectStringField()
+	})
+	Register((*MultiInt64ChoiceField)(nil), func() interface{} {
+		return NewMultiSelectInt64Field()
+	})
+}
+
+//------------------------------------------------------------------------------
+
 type Form interface {
 	SetErrors(map[string]error)
 	Errors() map[string]error
 }
 
-func InitForm(form Form) {
-	formStruct := reflect.ValueOf(form).Elem()
-	typeOfForm := formStruct.Type()
-	for i := 0; i < formStruct.NumField(); i++ {
-		field, ok := formStruct.Field(i).Interface().(Field)
-		if !ok {
-			continue
-		}
-		bf := field.ToBaseField()
+func InitForm(form Form) error {
+	formv := reflect.ValueOf(form).Elem()
+	formt := formv.Type()
 
-		name := typeOfForm.Field(i).Name
+	tinfo := tinfoMap.TypeInfo(formt)
+	for _, finfo := range tinfo.fields {
+		fv := formv.FieldByIndex(finfo.idx)
+		if fv.IsNil() {
+			fv.Set(reflect.ValueOf(finfo.constr()))
+		}
+		f := fv.Interface().(Field)
+
+		bf := f.ToBaseField()
 		if bf.Name == "" {
-			bf.Name = name
+			bf.Name = finfo.name
 		}
 		if bf.Label == "" {
-			bf.Label = name
+			bf.Label = finfo.name
 		}
+
 		attrs := bf.Widget.Attrs()
 		if _, ok := attrs.Get("id"); !ok {
-			attrs.Set("id", name)
+			attrs.Set("id", finfo.name)
 		}
 		if _, ok := attrs.Get("name"); !ok {
-			attrs.Set("name", name)
+			attrs.Set("name", finfo.name)
 		}
+
+		bf.IsRequired = finfo.flags&fReq != 0
 	}
+
+	return nil
 }
 
 type valueGetterFunc func(Field) interface{}

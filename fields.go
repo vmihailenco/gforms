@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"html/template"
 	"mime/multipart"
+	"reflect"
 	"strconv"
 )
 
@@ -20,11 +21,31 @@ type Field interface {
 	ToBaseField() *BaseField
 }
 
+func isEmpty(value interface{}) bool {
+	v := reflect.ValueOf(value)
+
+	switch v.Kind() {
+	case reflect.Array, reflect.Map, reflect.Slice, reflect.String:
+		return v.Len() == 0
+	case reflect.Bool:
+		return !v.Bool()
+	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+		return v.Int() == 0
+	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64, reflect.Uintptr:
+		return v.Uint() == 0
+	case reflect.Float32, reflect.Float64:
+		return v.Float() == 0
+	case reflect.Interface, reflect.Ptr:
+		return v.IsNil()
+	}
+	return false
+}
+
 func IsFieldValid(field Field, rawValue interface{}) bool {
 	bf := field.ToBaseField()
 	bf.ValidationError = nil
 
-	if rawValue == nil {
+	if isEmpty(rawValue) {
 		if bf.IsRequired {
 			bf.ValidationError = errors.New("This field is required")
 			return false
@@ -149,8 +170,7 @@ func (f *StringField) Render(attrs ...string) template.HTML {
 func NewStringField() *StringField {
 	return &StringField{
 		BaseField: &BaseField{
-			Widget:     NewTextWidget(),
-			IsRequired: true,
+			Widget: NewTextWidget(),
 		},
 	}
 }
@@ -158,8 +178,7 @@ func NewStringField() *StringField {
 func NewTextareaStringField() *StringField {
 	return &StringField{
 		BaseField: &BaseField{
-			Widget:     NewTextareaWidget(),
-			IsRequired: true,
+			Widget: NewTextareaWidget(),
 		},
 	}
 }
@@ -189,8 +208,7 @@ func NewSelectStringField() *StringChoiceField {
 	return &StringChoiceField{
 		StringField: &StringField{
 			BaseField: &BaseField{
-				Widget:     NewSelectWidget(),
-				IsRequired: true,
+				Widget: NewSelectWidget(),
 			},
 		},
 	}
@@ -200,15 +218,12 @@ func NewRadioStringField() *StringChoiceField {
 	return &StringChoiceField{
 		&StringField{
 			BaseField: &BaseField{
-				Widget:     NewRadioWidget(),
-				IsRequired: true,
+				Widget: NewRadioWidget(),
 			},
 		},
 	}
 }
 
-// ----------------------------------------------------------------------------
-// Int64Field
 // ----------------------------------------------------------------------------
 
 type Int64Field struct {
@@ -247,8 +262,7 @@ func (f *Int64Field) Render(attrs ...string) template.HTML {
 func NewInt64Field() *Int64Field {
 	return &Int64Field{
 		BaseField: &BaseField{
-			Widget:     NewTextWidget(),
-			IsRequired: true,
+			Widget: NewTextWidget(),
 		},
 	}
 }
@@ -279,8 +293,7 @@ func NewSelectInt64Field() *Int64ChoiceField {
 	return &Int64ChoiceField{
 		Int64Field: &Int64Field{
 			BaseField: &BaseField{
-				Widget:     NewSelectWidget(),
-				IsRequired: true,
+				Widget: NewSelectWidget(),
 			},
 		},
 	}
@@ -290,8 +303,7 @@ func NewRadioInt64Field() *Int64ChoiceField {
 	return &Int64ChoiceField{
 		&Int64Field{
 			BaseField: &BaseField{
-				Widget:     NewRadioWidget(),
-				IsRequired: true,
+				Widget: NewRadioWidget(),
 			},
 		},
 	}
@@ -335,8 +347,7 @@ func (f *BoolField) Render(attrs ...string) template.HTML {
 func NewBoolField() *BoolField {
 	return &BoolField{
 		BaseField: &BaseField{
-			Widget:     NewCheckboxWidget(),
-			IsRequired: true,
+			Widget: NewCheckboxWidget(),
 		},
 	}
 }
@@ -392,9 +403,8 @@ func NewMultiSelectStringField() *MultiStringChoiceField {
 		StringChoiceField: &StringChoiceField{
 			StringField: &StringField{
 				BaseField: &BaseField{
-					Widget:     NewMultiSelectWidget(),
-					IsRequired: true,
-					IsMulti:    true,
+					Widget:  NewMultiSelectWidget(),
+					IsMulti: true,
 				},
 			},
 		},
@@ -460,9 +470,8 @@ func NewMultiSelectInt64Field() *MultiInt64ChoiceField {
 		Int64ChoiceField: &Int64ChoiceField{
 			Int64Field: &Int64Field{
 				BaseField: &BaseField{
-					Widget:     NewMultiSelectWidget(),
-					IsRequired: true,
-					IsMulti:    true,
+					Widget:  NewMultiSelectWidget(),
+					IsMulti: true,
 				},
 			},
 		},
