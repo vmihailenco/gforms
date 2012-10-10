@@ -10,6 +10,16 @@ import (
 	"github.com/vmihailenco/gforms"
 )
 
+//------------------------------------------------------------------------------
+
+func init() {
+	gforms.Register((*BlobField)(nil), func() interface{} {
+		return NewBlobField()
+	})
+}
+
+//------------------------------------------------------------------------------
+
 func IsBlobstoreFormValid(f gforms.Form, blobs map[string][]*blobstore.BlobInfo, formValues url.Values) bool {
 	getValue := func(field gforms.Field) (value interface{}) {
 		bf := field.ToBaseField()
@@ -35,9 +45,7 @@ func IsBlobstoreFormValid(f gforms.Form, blobs map[string][]*blobstore.BlobInfo,
 	return gforms.IsValid(f, getValue)
 }
 
-// ----------------------------------------------------------------------------
-// BlobField
-// ----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 
 type BlobField struct {
 	*gforms.BaseField
