@@ -18,41 +18,25 @@ Example::
     )
 
     type ArticleForm struct {
-        *gforms.BaseForm
-        Title    *gforms.StringField
-        Text     *gforms.StringField
+        gforms.BaseForm
+        Title    *gforms.StringField `gforms:",req"`
+        Text     *gforms.StringField `gforms:",req"`
         IsPublic *gforms.BoolField
         Image    *gaeforms.BlobField
     }
 
     func NewArticleForm(article *Article) *ArticleForm {
-        title := gforms.NewStringField()
-        title.MinLen = 1
-        title.MaxLen = 500
+        f := &ArticleForm{}
+        gforms.InitForm(f)
 
-        text := gforms.NewTextareaStringField()
-        text.MinLen = 1
-
-        isPublic := gforms.NewBoolField()
-        isPublic.IsRequired = false
-        isPublic.Label = "Is public?"
-
-        image := gaeforms.NewBlobField()
+        f.Title.MaxLen = 500
+        f.IsPublic.Label = "Is public?"
 
         if article != nil {
-            title.SetInitial(article.Title)
-            text.SetInitial(article.Text())
-            isPublic.SetInitial(article.IsPublic)
+            f.Title.SetInitial(article.Title)
+            f.Text.SetInitial(article.Text())
+            f.IsPublic.SetInitial(article.IsPublic)
         }
-
-        f := &ArticleForm{
-            BaseForm: &gforms.BaseForm{},
-            Title:    title,
-            Text:     text,
-            IsPublic: isPublic,
-            Image:    image,
-        }
-        gforms.InitForm(f)
 
         return f
     }
