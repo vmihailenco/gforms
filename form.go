@@ -42,8 +42,8 @@ type Form interface {
 func InitForm(form Form) error {
 	formv := reflect.ValueOf(form).Elem()
 	formt := formv.Type()
-
 	tinfo := tinfoMap.TypeInfo(formt)
+
 	for _, finfo := range tinfo.fields {
 		fv := formv.FieldByIndex(finfo.idx)
 		if fv.IsNil() {
@@ -76,17 +76,20 @@ func InitForm(form Form) error {
 type valueGetterFunc func(Field) interface{}
 
 func IsValid(f Form, getValue valueGetterFunc) bool {
-	s := reflect.ValueOf(f).Elem()
+	formv := reflect.ValueOf(f).Elem()
+	formt := formv.Type()
+	tinfo := tinfoMap.TypeInfo(formt)
 
 	errs := make(map[string]error, 0)
-	for i := 0; i < s.NumField(); i++ {
-		field, ok := s.Field(i).Interface().(Field)
-		if !ok {
+	for _, finfo := range tinfo.fields {
+		fv := formv.FieldByIndex(finfo.idx)
+		if fv.IsNil() {
 			continue
 		}
-		bf := field.ToBaseField()
 
-		if !IsFieldValid(field, getValue(field)) {
+		f := fv.Interface().(Field)
+		bf := f.ToBaseField()
+		if !IsFieldValid(f, getValue(f)) {
 			errs[bf.Name] = bf.ValidationError
 		}
 	}
@@ -96,47 +99,46 @@ func IsValid(f Form, getValue valueGetterFunc) bool {
 }
 
 func IsFormValid(f Form, formValues url.Values) bool {
-	getValue := func(field Field) (value interface{}) {
+	getValue := func(field Field) interface{} {
 		bf := field.ToBaseField()
-
 		if bf.IsMultipart {
 			panic("IsFormValid() is called on multipart form (use IsMultipartFormValid())")
 		} else {
 			if bf.IsMulti {
-				value = formValues[bf.Name]
+				return formValues[bf.Name]
 			} else {
 				if values, ok := formValues[bf.Name]; ok {
-					value = values[0]
+					return values[0]
 				}
 			}
 		}
-		return
+		return nil
 	}
 	return IsValid(f, getValue)
 }
 
 func IsMultipartFormValid(f Form, multipartForm *multipart.Form) bool {
-	getValue := func(field Field) (value interface{}) {
+	getValue := func(field Field) interface{} {
 		bf := field.ToBaseField()
 
 		if bf.IsMultipart {
 			if bf.IsMulti {
-				value = multipartForm.File[bf.Name]
+				return multipartForm.File[bf.Name]
 			} else {
 				if _, ok := multipartForm.File[bf.Name]; ok {
-					value = multipartForm.File[bf.Name][0]
+					return multipartForm.File[bf.Name][0]
 				}
 			}
 		} else {
 			if bf.IsMulti {
-				value = multipartForm.Value[bf.Name]
+				return multipartForm.Value[bf.Name]
 			} else {
 				if values, ok := multipartForm.Value[bf.Name]; ok {
-					value = values[0]
+					return values[0]
 				}
 			}
 		}
-		return
+		return nil
 	}
 	return IsValid(f, getValue)
 }

@@ -2,14 +2,16 @@ package gforms
 
 import (
 	"bytes"
-	"errors"
 	"fmt"
 	"html/template"
 	"path"
+	"reflect"
 )
 
-var WidgetTemplate, CheckboxTemplate, RadioTemplate *template.Template
-var emptyHTML = template.HTML("")
+var (
+	WidgetTemplate, CheckboxTemplate, RadioTemplate *template.Template
+	emptyHTML                                       = template.HTML("")
+)
 
 func newTemplate(filepath string) (*template.Template, error) {
 	t := template.New(path.Base(filepath))
@@ -40,46 +42,44 @@ func init() {
 	}
 }
 
-func field(fIntrfc interface{}) (Field, error) {
-	f, ok := fIntrfc.(Field)
-	if !ok {
-		return nil, errors.New("gforms: expected Field")
-	}
-	return f, nil
-}
-
 func Render(field Field, attrs ...string) (template.HTML, error) {
-	context := map[string]interface{}{
-		"field": field,
-		"attrs": attrs,
+	if reflect.ValueOf(field).IsNil() {
+		return emptyHTML, nil
 	}
 
 	bf := field.ToBaseField()
+
+	data := struct {
+		Field     Field
+		BaseField *BaseField
+		Attrs     []string
+		Radios    []template.HTML
+	}{
+		Field:     field,
+		BaseField: bf,
+		Attrs:     attrs,
+	}
 
 	var t *template.Template
 	switch widget := bf.Widget.(type) {
 	case *CheckboxWidget:
 		t = CheckboxTemplate
 	case *RadioWidget:
-		context["radios"] = widget.Radios(attrs, field.(SingleValueField).StringValue())
+		data.Radios = widget.Radios(attrs, field.(SingleValueField).StringValue())
 		t = RadioTemplate
 	default:
 		t = WidgetTemplate
 	}
 
 	buf := &bytes.Buffer{}
-	if err := t.Execute(buf, context); err != nil {
+	if err := t.Execute(buf, data); err != nil {
 		return emptyHTML, err
 	}
 
 	return template.HTML(buf.String()), nil
 }
 
-func RenderError(fI interface{}) (template.HTML, error) {
-	f, err := field(fI)
-	if err != nil {
-		return emptyHTML, err
-	}
+func RenderError(f Field) (template.HTML, error) {
 	bf := f.ToBaseField()
 	if bf.ValidationError == nil {
 		return emptyHTML, nil
@@ -88,20 +88,12 @@ func RenderError(fI interface{}) (template.HTML, error) {
 	return template.HTML(error), nil
 }
 
-func RenderLabel(fI interface{}) (template.HTML, error) {
-	f, err := field(fI)
-	if err != nil {
-		return emptyHTML, err
-	}
+func RenderLabel(f Field) (template.HTML, error) {
 	bf := f.ToBaseField()
 	label := fmt.Sprintf(`<label class="control-label" for="%v">%v</label>`, bf.Name, bf.Label)
 	return template.HTML(label), nil
 }
 
-func RenderField(fI interface{}, attrsI interface{}) (template.HTML, error) {
-	f, err := field(fI)
-	if err != nil {
-		return emptyHTML, err
-	}
-	return f.Render(attrsI.([]string)...), nil
+func RenderField(f Field, attrs []string) (template.HTML, error) {
+	return f.Render(attrs...), nil
 }
