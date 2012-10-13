@@ -73,8 +73,7 @@ func (m *typeInfoMap) structFieldInfo(typ reflect.Type, f *reflect.StructField) 
 		constr: tconstrMap.Constructor(f.Type),
 	}
 
-	tag := f.Tag.Get("gforms")
-	tokens := strings.Split(tag, ",")
+	tokens := strings.Split(f.Tag.Get("gforms"), ",")
 	finfo.name = tokens[0]
 	if len(tokens) > 1 {
 		for _, flag := range tokens[1:] {
@@ -88,6 +87,7 @@ func (m *typeInfoMap) structFieldInfo(typ reflect.Type, f *reflect.StructField) 
 	if finfo.name == "" {
 		finfo.name = f.Name
 	}
+	finfo.name = strings.Join(SplitWords(finfo.name), " ")
 
 	return finfo
 }

@@ -43,9 +43,10 @@ func isEmpty(value interface{}) bool {
 
 func IsFieldValid(field Field, rawValue interface{}) bool {
 	bf := field.ToBaseField()
+	bf.IValue = nil
 	bf.ValidationError = nil
 
-	if isEmpty(rawValue) {
+	if rawValue == nil || isEmpty(rawValue) {
 		if bf.IsRequired {
 			bf.ValidationError = errors.New("This field is required")
 			return false

@@ -15,14 +15,14 @@ type StringChoicesValidator struct {
 func (v *StringChoicesValidator) Validate(rawValue interface{}) error {
 	value, ok := rawValue.(string)
 	if !ok {
-		return fmt.Errorf("Type %T is not supported.", rawValue)
+		return fmt.Errorf("Type %T is not supported", rawValue)
 	}
 	for _, choice := range v.Choices {
 		if choice.Value == value {
 			return nil
 		}
 	}
-	return fmt.Errorf("%v is not valid choice.", value)
+	return fmt.Errorf("%v is invalid choice", value)
 }
 
 func NewStringChoicesValidator(choices []StringChoice) *StringChoicesValidator {
@@ -36,14 +36,14 @@ type Int64ChoicesValidator struct {
 func (v *Int64ChoicesValidator) Validate(rawValue interface{}) error {
 	value, ok := rawValue.(int64)
 	if !ok {
-		return fmt.Errorf("Type %T is not supported.", rawValue)
+		return fmt.Errorf("Type %T is not supported", rawValue)
 	}
 	for _, choice := range v.Choices {
 		if choice.Value == value {
 			return nil
 		}
 	}
-	return fmt.Errorf("%v is not valid choice.", value)
+	return fmt.Errorf("%v is invalid choice", value)
 }
 
 func NewInt64ChoicesValidator(choices []Int64Choice) *Int64ChoicesValidator {

@@ -9,37 +9,26 @@ import (
 )
 
 var (
-	WidgetTemplate, CheckboxTemplate, RadioTemplate *template.Template
-	emptyHTML                                       = template.HTML("")
+	WidgetTemplate   = newTemplate("templates/gforms/widget.html")
+	CheckboxTemplate = newTemplate("templates/gforms/checkbox.html")
+	RadioTemplate    = newTemplate("templates/gforms/radio.html")
+
+	emptyHTML = template.HTML("")
 )
 
-func newTemplate(filepath string) (*template.Template, error) {
+func newTemplate(filepath string) *template.Template {
 	t := template.New(path.Base(filepath))
 	t = t.Funcs(template.FuncMap{
 		"renderField": RenderField,
 		"renderLabel": RenderLabel,
 		"renderError": RenderError,
 	})
-	return t.ParseFiles(filepath)
-}
-
-func init() {
 	var err error
-
-	WidgetTemplate, err = newTemplate("templates/gforms/widget.html")
+	t, err = t.ParseFiles(filepath)
 	if err != nil {
 		panic(err)
 	}
-
-	CheckboxTemplate, err = newTemplate("templates/gforms/checkbox.html")
-	if err != nil {
-		panic(err)
-	}
-
-	RadioTemplate, err = newTemplate("templates/gforms/radio.html")
-	if err != nil {
-		panic(err)
-	}
+	return t
 }
 
 func Render(field Field, attrs ...string) (template.HTML, error) {
