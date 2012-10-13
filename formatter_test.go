@@ -15,6 +15,7 @@ func (t *FormatterTest) TestSplitWords(c *C) {
 		s     string
 		words []string
 	}{
+		{"", []string{}},
 		{"FooBar", []string{"Foo", "Bar"}},
 		{"HTTP", []string{"HTTP"}},
 		{"HTTPReq", []string{"HTTP", "Req"}},
