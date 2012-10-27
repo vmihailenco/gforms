@@ -53,18 +53,16 @@ func (m *typeInfoMap) TypeInfo(typ reflect.Type) *typeInfo {
 	tinfo = &typeInfo{}
 	for i := 0; i < typ.NumField(); i++ {
 		f := typ.Field(i)
-		if f.PkgPath != "" {
-			continue // Private field
-		}
-
-		if !f.Type.Implements(fieldType) {
+		if f.PkgPath != "" || !f.Type.Implements(fieldType) {
 			continue
 		}
-
 		tinfo.fields = append(tinfo.fields, m.structFieldInfo(typ, &f))
 	}
 
+	m.l.Lock()
 	tinfoMap.m[typ] = tinfo
+	m.l.Unlock()
+
 	return tinfo
 }
 
