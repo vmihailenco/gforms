@@ -36,14 +36,13 @@ func (t *TestForm) TestFormUsage(c *C) {
 	f := NewTestForm()
 
 	valueGetter := func(f gforms.Field) interface{} {
-		bf := f.ToBaseField()
-		switch bf.Name {
+		switch f.Name() {
 		case "Name":
 			return "foo"
 		case "Age":
 			return "23"
 		}
-		panic("unreachable")
+		panic("not reached")
 	}
 
 	c.Assert(gforms.IsValid(f, valueGetter), Equals, false)

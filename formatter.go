@@ -70,7 +70,7 @@ func (s *splitter) split() []string {
 	return words
 }
 
-func SplitWords(s string) []string {
+func splitWords(s string) []string {
 	splitter := newSplitter(s)
 	return splitter.split()
 }

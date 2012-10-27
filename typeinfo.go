@@ -85,7 +85,7 @@ func (m *typeInfoMap) structFieldInfo(typ reflect.Type, f *reflect.StructField) 
 
 	finfo.name = f.Name
 	if finfo.label == "" {
-		finfo.label = strings.Join(SplitWords(f.Name), " ")
+		finfo.label = strings.Join(splitWords(f.Name), " ")
 	}
 
 	return finfo

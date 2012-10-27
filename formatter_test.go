@@ -1,9 +1,7 @@
-package gforms_test
+package gforms
 
 import (
 	. "launchpad.net/gocheck"
-
-	"github.com/vmihailenco/gforms"
 )
 
 type FormatterTest struct{}
@@ -23,6 +21,6 @@ func (t *FormatterTest) TestSplitWords(c *C) {
 	}
 
 	for _, row := range table {
-		c.Assert(gforms.SplitWords(row.s), DeepEquals, row.words)
+		c.Assert(splitWords(row.s), DeepEquals, row.words)
 	}
 }
