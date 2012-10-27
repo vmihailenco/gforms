@@ -46,28 +46,20 @@ func InitForm(form Form) error {
 
 	for _, finfo := range tinfo.fields {
 		fv := formv.FieldByIndex(finfo.idx)
-		if fv.IsNil() {
+		isNil := fv.IsNil()
+		if isNil {
 			fv.Set(reflect.ValueOf(finfo.constr()))
 		}
 		f := fv.Interface().(Field)
-
-		bf := f.ToBaseField()
-		if bf.Name == "" {
-			bf.Name = finfo.name
+		if !f.HasName() {
+			f.SetName(finfo.name)
 		}
-		if bf.Label == "" {
-			bf.Label = finfo.name
+		if !f.HasLabel() {
+			f.SetLabel(finfo.label)
 		}
-
-		attrs := bf.Widget.Attrs()
-		if _, ok := attrs.Get("id"); !ok {
-			attrs.Set("id", finfo.name)
+		if isNil {
+			f.SetIsRequired(finfo.flags&fReq != 0)
 		}
-		if _, ok := attrs.Get("name"); !ok {
-			attrs.Set("name", finfo.name)
-		}
-
-		bf.IsRequired = finfo.flags&fReq != 0
 	}
 
 	return nil
@@ -88,9 +80,8 @@ func IsValid(f Form, getValue valueGetterFunc) bool {
 		}
 
 		f := fv.Interface().(Field)
-		bf := f.ToBaseField()
 		if !IsFieldValid(f, getValue(f)) {
-			errs[bf.Name] = bf.ValidationError
+			errs[f.Name()] = f.ValidationError()
 		}
 	}
 	f.SetErrors(errs)
@@ -98,49 +89,46 @@ func IsValid(f Form, getValue valueGetterFunc) bool {
 	return len(f.Errors()) == 0
 }
 
-func IsFormValid(f Form, formValues url.Values) bool {
-	getValue := func(field Field) interface{} {
-		bf := field.ToBaseField()
-		if bf.IsMultipart {
+func IsFormValid(form Form, formValues url.Values) bool {
+	getValue := func(f Field) interface{} {
+		if f.IsMultipart() {
 			panic("IsFormValid() is called on multipart form (use IsMultipartFormValid())")
 		} else {
-			if bf.IsMulti {
-				return formValues[bf.Name]
+			if f.IsMulti() {
+				return formValues[f.Name()]
 			} else {
-				if values, ok := formValues[bf.Name]; ok {
+				if values, ok := formValues[f.Name()]; ok {
 					return values[0]
 				}
 			}
 		}
 		return nil
 	}
-	return IsValid(f, getValue)
+	return IsValid(form, getValue)
 }
 
-func IsMultipartFormValid(f Form, multipartForm *multipart.Form) bool {
-	getValue := func(field Field) interface{} {
-		bf := field.ToBaseField()
-
-		if bf.IsMultipart {
-			if bf.IsMulti {
-				return multipartForm.File[bf.Name]
+func IsMultipartFormValid(form Form, multipartForm *multipart.Form) bool {
+	getValue := func(f Field) interface{} {
+		if f.IsMultipart() {
+			if f.IsMulti() {
+				return multipartForm.File[f.Name()]
 			} else {
-				if _, ok := multipartForm.File[bf.Name]; ok {
-					return multipartForm.File[bf.Name][0]
+				if _, ok := multipartForm.File[f.Name()]; ok {
+					return multipartForm.File[f.Name()][0]
 				}
 			}
 		} else {
-			if bf.IsMulti {
-				return multipartForm.Value[bf.Name]
+			if f.IsMulti() {
+				return multipartForm.Value[f.Name()]
 			} else {
-				if values, ok := multipartForm.Value[bf.Name]; ok {
+				if values, ok := multipartForm.Value[f.Name()]; ok {
 					return values[0]
 				}
 			}
 		}
 		return nil
 	}
-	return IsValid(f, getValue)
+	return IsValid(form, getValue)
 }
 
 //------------------------------------------------------------------------------

@@ -9,16 +9,42 @@ import (
 	"strconv"
 )
 
+var (
+	ErrRequired = errors.New("This field is required")
+)
+
 //------------------------------------------------------------------------------
 
 type Field interface {
 	Validator
 
+	HasName() bool
+	SetName(string)
+	Name() string
+
+	HasLabel() bool
+	SetLabel(string)
+	Label() string
+
+	SetWidget(Widget)
+	Widget() Widget
+
+	SetIsMulti(bool)
+	IsMulti() bool
+	SetIsMultipart(bool)
+	IsMultipart() bool
+	SetIsRequired(bool)
+	IsRequired() bool
+
 	AddValidator(Validator)
 	ApplyValidators(interface{}) error
+
 	HasValidationError() bool
+	SetValidationError(error)
+	ValidationError() error
+
+	Reset()
 	Render(...string) template.HTML
-	ToBaseField() *BaseField
 }
 
 func isEmpty(value interface{}) bool {
@@ -41,22 +67,20 @@ func isEmpty(value interface{}) bool {
 	return false
 }
 
-func IsFieldValid(field Field, rawValue interface{}) bool {
-	bf := field.ToBaseField()
-	bf.IValue = nil
-	bf.ValidationError = nil
+func IsFieldValid(f Field, rawValue interface{}) bool {
+	f.Reset()
 
 	if rawValue == nil || isEmpty(rawValue) {
-		if bf.IsRequired {
-			bf.ValidationError = errors.New("This field is required")
+		if f.IsRequired() {
+			f.SetValidationError(ErrRequired)
 			return false
 		} else {
 			return true
 		}
 	}
 
-	if err := field.Validate(rawValue); err != nil {
-		bf.ValidationError = err
+	if err := f.Validate(rawValue); err != nil {
+		f.SetValidationError(err)
 		return false
 	}
 
@@ -74,28 +98,91 @@ type MultiValueField interface {
 //------------------------------------------------------------------------------
 
 type BaseField struct {
-	Name   string
-	Label  string
-	Widget Widget
+	hasName  bool
+	name     string
+	hasLabel bool
+	label    string
+	widget   Widget
 
-	IsMulti     bool
-	IsMultipart bool
-	IsRequired  bool
+	isMulti     bool
+	isMultipart bool
+	isRequired  bool
 
-	Validators      []Validator
-	ValidationError error
-	IValue          interface{}
+	validators      []Validator
+	validationError error
+	iValue          interface{}
+}
+
+func (f *BaseField) HasName() bool {
+	return f.hasName
+}
+
+func (f *BaseField) SetName(name string) {
+	f.hasName = true
+	f.name = name
+	attrs := f.Widget().Attrs()
+	attrs.Set("id", name)
+	attrs.Set("name", name)
+}
+
+func (f *BaseField) Name() string {
+	return f.name
+}
+
+func (f *BaseField) HasLabel() bool {
+	return f.hasLabel
+}
+
+func (f *BaseField) SetLabel(label string) {
+	f.hasLabel = true
+	f.label = label
+}
+
+func (f *BaseField) Label() string {
+	return f.label
+}
+
+func (f *BaseField) SetWidget(widget Widget) {
+	f.widget = widget
+}
+
+func (f *BaseField) Widget() Widget {
+	return f.widget
+}
+
+func (f *BaseField) SetIsMulti(flag bool) {
+	f.isMulti = flag
+}
+
+func (f *BaseField) IsMulti() bool {
+	return f.isMulti
+}
+
+func (f *BaseField) SetIsMultipart(flag bool) {
+	f.isMultipart = flag
+}
+
+func (f *BaseField) IsMultipart() bool {
+	return f.isMultipart
+}
+
+func (f *BaseField) SetIsRequired(flag bool) {
+	f.isRequired = flag
+}
+
+func (f *BaseField) IsRequired() bool {
+	return f.isRequired
 }
 
 func (f *BaseField) AddValidator(validator Validator) {
-	if f.Validators == nil {
-		f.Validators = make([]Validator, 0)
+	if f.validators == nil {
+		f.validators = make([]Validator, 0)
 	}
-	f.Validators = append(f.Validators, validator)
+	f.validators = append(f.validators, validator)
 }
 
 func (f *BaseField) ApplyValidators(rawValue interface{}) error {
-	for _, validator := range f.Validators {
+	for _, validator := range f.validators {
 		if err := validator.Validate(rawValue); err != nil {
 			return err
 		}
@@ -103,28 +190,36 @@ func (f *BaseField) ApplyValidators(rawValue interface{}) error {
 	return nil
 }
 
-func (f *BaseField) Validate(rawValue interface{}) error {
+func (f *BaseField) validate(rawValue interface{}) error {
 	panic("not implemented.")
 }
 
 func (f *BaseField) HasValidationError() bool {
-	return f.ValidationError != nil
+	return f.validationError != nil
+}
+
+func (f *BaseField) SetValidationError(err error) {
+	f.validationError = err
+}
+
+func (f *BaseField) ValidationError() error {
+	return f.validationError
 }
 
 func (f *BaseField) StringValue() string {
-	if f.IValue == nil {
+	if f.iValue == nil {
 		return ""
 	}
-	return fmt.Sprint(f.IValue)
+	return fmt.Sprint(f.iValue)
+}
+
+func (f *BaseField) Reset() {
+	f.iValue = nil
+	f.validationError = nil
 }
 
 func (f *BaseField) Render(attrs ...string) template.HTML {
-	panic("not implemented.")
-	return template.HTML("")
-}
-
-func (f *BaseField) ToBaseField() *BaseField {
-	return f
+	panic("not implemented")
 }
 
 //------------------------------------------------------------------------------
@@ -135,10 +230,10 @@ type StringField struct {
 }
 
 func (f *StringField) Value() string {
-	if f.IValue == nil {
+	if f.iValue == nil {
 		return ""
 	}
-	return f.IValue.(string)
+	return f.iValue.(string)
 }
 
 func (f *StringField) Validate(rawValue interface{}) error {
@@ -156,22 +251,22 @@ func (f *StringField) Validate(rawValue interface{}) error {
 		return err
 	}
 
-	f.IValue = value
+	f.iValue = value
 	return nil
 }
 
 func (f *StringField) SetInitial(initial string) {
-	f.IValue = initial
+	f.iValue = initial
 }
 
 func (f *StringField) Render(attrs ...string) template.HTML {
-	return f.Widget.Render(attrs, f.StringValue())
+	return f.Widget().Render(attrs, f.StringValue())
 }
 
 func NewStringField() *StringField {
 	return &StringField{
 		BaseField: &BaseField{
-			Widget: NewTextWidget(),
+			widget: NewTextWidget(),
 		},
 	}
 }
@@ -179,7 +274,7 @@ func NewStringField() *StringField {
 func NewTextareaStringField() *StringField {
 	return &StringField{
 		BaseField: &BaseField{
-			Widget: NewTextareaWidget(),
+			widget: NewTextareaWidget(),
 		},
 	}
 }
@@ -201,7 +296,7 @@ func (f *StringChoiceField) SetChoices(choices []StringChoice) {
 		strChoices = append(strChoices, [2]string{choice.Value, choice.Label})
 	}
 
-	f.Widget.(ChoiceWidget).SetChoices(strChoices)
+	f.Widget().(ChoiceWidget).SetChoices(strChoices)
 	f.AddValidator(NewStringChoicesValidator(choices))
 }
 
@@ -209,7 +304,7 @@ func NewSelectStringField() *StringChoiceField {
 	return &StringChoiceField{
 		StringField: &StringField{
 			BaseField: &BaseField{
-				Widget: NewSelectWidget(),
+				widget: NewSelectWidget(),
 			},
 		},
 	}
@@ -219,7 +314,7 @@ func NewRadioStringField() *StringChoiceField {
 	return &StringChoiceField{
 		&StringField{
 			BaseField: &BaseField{
-				Widget: NewRadioWidget(),
+				widget: NewRadioWidget(),
 			},
 		},
 	}
@@ -232,10 +327,10 @@ type Int64Field struct {
 }
 
 func (f *Int64Field) Value() int64 {
-	if f.IValue == nil {
+	if f.iValue == nil {
 		return 0
 	}
-	return f.IValue.(int64)
+	return f.iValue.(int64)
 }
 
 func (f *Int64Field) Validate(rawValue interface{}) error {
@@ -248,22 +343,22 @@ func (f *Int64Field) Validate(rawValue interface{}) error {
 		return err
 	}
 
-	f.IValue = value
+	f.iValue = value
 	return nil
 }
 
 func (f *Int64Field) SetInitial(initial int64) {
-	f.IValue = initial
+	f.iValue = initial
 }
 
 func (f *Int64Field) Render(attrs ...string) template.HTML {
-	return f.Widget.Render(attrs, f.StringValue())
+	return f.Widget().Render(attrs, f.StringValue())
 }
 
 func NewInt64Field() *Int64Field {
 	return &Int64Field{
 		BaseField: &BaseField{
-			Widget: NewTextWidget(),
+			widget: NewTextWidget(),
 		},
 	}
 }
@@ -286,7 +381,7 @@ func (f *Int64ChoiceField) SetChoices(choices []Int64Choice) {
 		strChoices = append(strChoices, strChoice)
 	}
 
-	f.Widget.(ChoiceWidget).SetChoices(strChoices)
+	f.Widget().(ChoiceWidget).SetChoices(strChoices)
 	f.AddValidator(NewInt64ChoicesValidator(choices))
 }
 
@@ -294,7 +389,7 @@ func NewSelectInt64Field() *Int64ChoiceField {
 	return &Int64ChoiceField{
 		Int64Field: &Int64Field{
 			BaseField: &BaseField{
-				Widget: NewSelectWidget(),
+				widget: NewSelectWidget(),
 			},
 		},
 	}
@@ -304,7 +399,7 @@ func NewRadioInt64Field() *Int64ChoiceField {
 	return &Int64ChoiceField{
 		&Int64Field{
 			BaseField: &BaseField{
-				Widget: NewRadioWidget(),
+				widget: NewRadioWidget(),
 			},
 		},
 	}
@@ -317,10 +412,10 @@ type BoolField struct {
 }
 
 func (f *BoolField) Value() bool {
-	if f.IValue == nil {
+	if f.iValue == nil {
 		return false
 	}
-	return f.IValue.(bool)
+	return f.iValue.(bool)
 }
 
 func (f *BoolField) Validate(rawValue interface{}) error {
@@ -330,25 +425,25 @@ func (f *BoolField) Validate(rawValue interface{}) error {
 		return err
 	}
 
-	f.IValue = value
+	f.iValue = value
 	return nil
 }
 
 func (f *BoolField) SetInitial(initial bool) {
-	f.IValue = initial
+	f.iValue = initial
 }
 
 func (f *BoolField) Render(attrs ...string) template.HTML {
 	if f.StringValue() == "true" {
 		attrs = append(attrs, "checked", "checked")
 	}
-	return f.Widget.Render(attrs, "true")
+	return f.Widget().Render(attrs, "true")
 }
 
 func NewBoolField() *BoolField {
 	return &BoolField{
 		BaseField: &BaseField{
-			Widget: NewCheckboxWidget(),
+			widget: NewCheckboxWidget(),
 		},
 	}
 }
@@ -360,10 +455,10 @@ type MultiStringChoiceField struct {
 }
 
 func (f *MultiStringChoiceField) Value() []string {
-	if f.IValue == nil {
+	if f.iValue == nil {
 		return nil
 	}
-	return f.IValue.([]string)
+	return f.iValue.([]string)
 }
 
 func (f *MultiStringChoiceField) Validate(rawValue interface{}) error {
@@ -383,12 +478,12 @@ func (f *MultiStringChoiceField) Validate(rawValue interface{}) error {
 		}
 	}
 
-	f.IValue = values
+	f.iValue = values
 	return nil
 }
 
 func (f *MultiStringChoiceField) SetInitial(initial []string) {
-	f.IValue = initial
+	f.iValue = initial
 }
 
 func (f *MultiStringChoiceField) StringValue() []string {
@@ -396,7 +491,7 @@ func (f *MultiStringChoiceField) StringValue() []string {
 }
 
 func (f *MultiStringChoiceField) Render(attrs ...string) template.HTML {
-	return f.Widget.Render(attrs, f.StringValue()...)
+	return f.Widget().Render(attrs, f.StringValue()...)
 }
 
 func NewMultiSelectStringField() *MultiStringChoiceField {
@@ -404,8 +499,8 @@ func NewMultiSelectStringField() *MultiStringChoiceField {
 		StringChoiceField: &StringChoiceField{
 			StringField: &StringField{
 				BaseField: &BaseField{
-					Widget:  NewMultiSelectWidget(),
-					IsMulti: true,
+					widget:  NewMultiSelectWidget(),
+					isMulti: true,
 				},
 			},
 		},
@@ -419,10 +514,10 @@ type MultiInt64ChoiceField struct {
 }
 
 func (f *MultiInt64ChoiceField) Value() []int64 {
-	if f.IValue == nil {
+	if f.iValue == nil {
 		return nil
 	}
-	return f.IValue.([]int64)
+	return f.iValue.([]int64)
 }
 
 func (f *MultiInt64ChoiceField) Validate(rawValue interface{}) error {
@@ -446,12 +541,12 @@ func (f *MultiInt64ChoiceField) Validate(rawValue interface{}) error {
 		}
 	}
 
-	f.IValue = values
+	f.iValue = values
 	return nil
 }
 
 func (f *MultiInt64ChoiceField) SetInitial(initial []int64) {
-	f.IValue = initial
+	f.iValue = initial
 }
 
 func (f *MultiInt64ChoiceField) StringValue() []string {
@@ -463,7 +558,7 @@ func (f *MultiInt64ChoiceField) StringValue() []string {
 }
 
 func (f *MultiInt64ChoiceField) Render(attrs ...string) template.HTML {
-	return f.Widget.Render(attrs, f.StringValue()...)
+	return f.Widget().Render(attrs, f.StringValue()...)
 }
 
 func NewMultiSelectInt64Field() *MultiInt64ChoiceField {
@@ -471,8 +566,8 @@ func NewMultiSelectInt64Field() *MultiInt64ChoiceField {
 		Int64ChoiceField: &Int64ChoiceField{
 			Int64Field: &Int64Field{
 				BaseField: &BaseField{
-					Widget:  NewMultiSelectWidget(),
-					IsMulti: true,
+					widget:  NewMultiSelectWidget(),
+					isMulti: true,
 				},
 			},
 		},
@@ -486,10 +581,10 @@ type FileField struct {
 }
 
 func (f *FileField) Value() *multipart.FileHeader {
-	if f.IValue == nil {
+	if f.iValue == nil {
 		return nil
 	}
-	return f.IValue.(*multipart.FileHeader)
+	return f.iValue.(*multipart.FileHeader)
 }
 
 func (f *FileField) Validate(rawValue interface{}) error {
@@ -502,23 +597,23 @@ func (f *FileField) Validate(rawValue interface{}) error {
 		return err
 	}
 
-	f.IValue = value
+	f.iValue = value
 	return nil
 }
 
 func (f *FileField) SetInitial(initial *multipart.FileHeader) {
-	f.IValue = initial
+	f.iValue = initial
 }
 
 func (f *FileField) Render(attrs ...string) template.HTML {
-	return f.Widget.Render(attrs)
+	return f.widget.Render(attrs)
 }
 
 func NewFileField() *FileField {
 	return &FileField{
 		BaseField: &BaseField{
-			Widget:      NewFileWidget(),
-			IsMultipart: true,
+			widget:      NewFileWidget(),
+			isMultipart: true,
 		},
 	}
 }

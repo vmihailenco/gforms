@@ -22,6 +22,7 @@ const (
 type fieldInfo struct {
 	idx    []int
 	name   string
+	label  string
 	constr constructor
 	flags  fieldFlags
 }
@@ -74,7 +75,7 @@ func (m *typeInfoMap) structFieldInfo(typ reflect.Type, f *reflect.StructField) 
 	}
 
 	tokens := strings.Split(f.Tag.Get("gforms"), ",")
-	finfo.name = tokens[0]
+	finfo.label = tokens[0]
 	if len(tokens) > 1 {
 		for _, flag := range tokens[1:] {
 			switch flag {
@@ -84,10 +85,10 @@ func (m *typeInfoMap) structFieldInfo(typ reflect.Type, f *reflect.StructField) 
 		}
 	}
 
-	if finfo.name == "" {
-		finfo.name = f.Name
+	finfo.name = f.Name
+	if finfo.label == "" {
+		finfo.label = strings.Join(SplitWords(f.Name), " ")
 	}
-	finfo.name = strings.Join(SplitWords(finfo.name), " ")
 
 	return finfo
 }

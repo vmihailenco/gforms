@@ -2,7 +2,6 @@ package gforms
 
 import (
 	"bytes"
-	"fmt"
 	"html/template"
 	"path"
 	"reflect"
@@ -36,21 +35,17 @@ func Render(field Field, attrs ...string) (template.HTML, error) {
 		return emptyHTML, nil
 	}
 
-	bf := field.ToBaseField()
-
 	data := struct {
-		Field     Field
-		BaseField *BaseField
-		Attrs     []string
-		Radios    []template.HTML
+		Field  Field
+		Attrs  []string
+		Radios []template.HTML
 	}{
-		Field:     field,
-		BaseField: bf,
-		Attrs:     attrs,
+		Field: field,
+		Attrs: attrs,
 	}
 
 	var t *template.Template
-	switch widget := bf.Widget.(type) {
+	switch widget := field.Widget().(type) {
 	case *CheckboxWidget:
 		t = CheckboxTemplate
 	case *RadioWidget:
@@ -69,18 +64,24 @@ func Render(field Field, attrs ...string) (template.HTML, error) {
 }
 
 func RenderError(f Field) (template.HTML, error) {
-	bf := f.ToBaseField()
-	if bf.ValidationError == nil {
+	err := f.ValidationError()
+	if err == nil {
 		return emptyHTML, nil
 	}
-	error := fmt.Sprintf(`<span class="help-inline">%v</span>`, bf.ValidationError)
-	return template.HTML(error), nil
+	s := `<span class="help-inline">` + err.Error() + `</span>`
+	return template.HTML(s), nil
 }
 
 func RenderLabel(f Field) (template.HTML, error) {
-	bf := f.ToBaseField()
-	label := fmt.Sprintf(`<label class="control-label" for="%v">%v</label>`, bf.Name, bf.Label)
-	return template.HTML(label), nil
+	label := f.Label()
+	if label == "" {
+		return emptyHTML, nil
+	}
+	if f.IsRequired() {
+		label += "*"
+	}
+	s := `<label class="control-label" for="` + f.Name() + `">` + label + `</label>`
+	return template.HTML(s), nil
 }
 
 func RenderField(f Field, attrs []string) (template.HTML, error) {

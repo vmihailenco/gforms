@@ -1,7 +1,7 @@
 <div class="control-group{{if .Field.HasValidationError}} error{{end}}">
   <div class="controls">
     <label class="checkbox">
-      {{renderField .Field .Attrs}} {{.BaseField.Label}}
+      {{renderField .Field .Attrs}} {{.Field.Label}}
     </label>
     {{renderError .Field}}
   </div>
