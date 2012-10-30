@@ -10,7 +10,7 @@ import (
 
 	"github.com/vmihailenco/gforms"
 
-	"code.google.com/p/gorilla/sessions"
+	"github.com/gorilla/sessions"
 )
 
 const (
