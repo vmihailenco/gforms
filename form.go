@@ -35,6 +35,9 @@ func init() {
 //------------------------------------------------------------------------------
 
 type Form interface {
+	SetFields(map[string]Field)
+	Fields() map[string]Field
+
 	SetErrors(map[string]error)
 	Errors() map[string]error
 }
@@ -44,6 +47,7 @@ func InitForm(form Form) error {
 	formt := formv.Type()
 	tinfo := tinfoMap.TypeInfo(formt)
 
+	fields := make(map[string]Field, len(tinfo.fields))
 	for _, finfo := range tinfo.fields {
 		fv := formv.FieldByIndex(finfo.idx)
 		isNil := fv.IsNil()
@@ -60,7 +64,9 @@ func InitForm(form Form) error {
 		if isNil {
 			f.SetIsRequired(finfo.flags&fReq != 0)
 		}
+		fields[f.Name()] = f
 	}
+	form.SetFields(fields)
 
 	return nil
 }
@@ -134,13 +140,22 @@ func IsMultipartFormValid(form Form, multipartForm *multipart.Form) bool {
 //------------------------------------------------------------------------------
 
 type BaseForm struct {
+	fields map[string]Field
 	errors map[string]error
 }
 
-func (bf *BaseForm) SetErrors(errors map[string]error) {
-	bf.errors = errors
+func (f *BaseForm) SetFields(fields map[string]Field) {
+	f.fields = fields
 }
 
-func (bf *BaseForm) Errors() map[string]error {
-	return bf.errors
+func (f *BaseForm) Fields() map[string]Field {
+	return f.fields
+}
+
+func (f *BaseForm) SetErrors(errors map[string]error) {
+	f.errors = errors
+}
+
+func (f *BaseForm) Errors() map[string]error {
+	return f.errors
 }

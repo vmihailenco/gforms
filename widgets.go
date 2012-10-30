@@ -10,6 +10,7 @@ import (
 //------------------------------------------------------------------------------
 
 type Widget interface {
+	IsHidden() bool
 	Attrs() *WidgetAttrs
 	Render([]string, ...string) template.HTML
 }
@@ -26,6 +27,10 @@ type BaseWidget struct {
 	attrs *WidgetAttrs
 }
 
+func (w *BaseWidget) IsHidden() bool {
+	return false
+}
+
 func (w *BaseWidget) Attrs() *WidgetAttrs {
 	return w.attrs
 }
@@ -34,6 +39,32 @@ func (w *BaseWidget) Render(attrs []string, values ...string) template.HTML {
 	w.Attrs().FromSlice(attrs)
 	html := fmt.Sprintf(w.HTML, w.Attrs().String(), tTemplate.HTMLEscapeString(values[0]))
 	return template.HTML(html)
+}
+
+//------------------------------------------------------------------------------
+
+type HiddenWidget struct {
+	*BaseWidget
+}
+
+func NewHiddenWidget() *HiddenWidget {
+	return &HiddenWidget{
+		&BaseWidget{
+			attrs: &WidgetAttrs{
+				attrs: [][2]string{{"type", "hidden"}},
+			},
+		},
+	}
+}
+
+func (w *HiddenWidget) IsHidden() bool {
+	return true
+}
+
+func (w *HiddenWidget) Render(attrs []string, values ...string) template.HTML {
+	w.attrs.Set("value", values[0])
+	s := `<input` + w.attrs.String() + ` />`
+	return template.HTML(s)
 }
 
 //------------------------------------------------------------------------------
