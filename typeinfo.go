@@ -44,7 +44,7 @@ func newTypeInfoMap() *typeInfoMap {
 
 func (m *typeInfoMap) TypeInfo(typ reflect.Type) *typeInfo {
 	m.l.RLock()
-	tinfo, ok := tinfoMap.m[typ]
+	tinfo, ok := m.m[typ]
 	m.l.RUnlock()
 	if ok {
 		return tinfo
@@ -60,7 +60,7 @@ func (m *typeInfoMap) TypeInfo(typ reflect.Type) *typeInfo {
 	}
 
 	m.l.Lock()
-	tinfoMap.m[typ] = tinfo
+	m.m[typ] = tinfo
 	m.l.Unlock()
 
 	return tinfo
