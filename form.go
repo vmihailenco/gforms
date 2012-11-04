@@ -12,6 +12,9 @@ func init() {
 	Register((*StringField)(nil), func() interface{} {
 		return NewStringField()
 	})
+	Register((*TextareaStringField)(nil), func() interface{} {
+		return NewTextareaStringField()
+	})
 	Register((*StringChoiceField)(nil), func() interface{} {
 		return NewSelectStringField()
 	})

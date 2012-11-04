@@ -271,10 +271,16 @@ func NewStringField() *StringField {
 	}
 }
 
-func NewTextareaStringField() *StringField {
-	return &StringField{
-		BaseField: &BaseField{
-			widget: NewTextareaWidget(),
+type TextareaStringField struct {
+	*StringField
+}
+
+func NewTextareaStringField() *TextareaStringField {
+	return &TextareaStringField{
+		StringField: &StringField{
+			BaseField: &BaseField{
+				widget: NewTextareaWidget(),
+			},
 		},
 	}
 }
