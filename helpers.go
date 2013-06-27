@@ -9,13 +9,16 @@ import (
 )
 
 var (
-	appRoot          = os.Getenv("APP_ROOT")
-	WidgetTemplate   = newTemplate(appRoot + "templates/gforms/widget.html")
-	CheckboxTemplate = newTemplate(appRoot + "templates/gforms/checkbox.html")
-	RadioTemplate    = newTemplate(appRoot + "templates/gforms/radio.html")
+	WidgetTemplate   = newTemplate(rootDir() + "templates/gforms/widget.html")
+	CheckboxTemplate = newTemplate(rootDir() + "templates/gforms/checkbox.html")
+	RadioTemplate    = newTemplate(rootDir() + "templates/gforms/radio.html")
 
 	emptyHTML = template.HTML("")
 )
+
+func rootDir() string {
+	return os.Getenv("ROOT_DIR")
+}
 
 func newTemplate(filepath string) *template.Template {
 	t := template.New(path.Base(filepath))
