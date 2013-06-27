@@ -3,14 +3,16 @@ package gforms
 import (
 	"bytes"
 	"html/template"
+	"os"
 	"path"
 	"reflect"
 )
 
 var (
-	WidgetTemplate   = newTemplate("templates/gforms/widget.html")
-	CheckboxTemplate = newTemplate("templates/gforms/checkbox.html")
-	RadioTemplate    = newTemplate("templates/gforms/radio.html")
+	appRoot          = os.Getenv("APP_ROOT")
+	WidgetTemplate   = newTemplate(appRoot + "templates/gforms/widget.html")
+	CheckboxTemplate = newTemplate(appRoot + "templates/gforms/checkbox.html")
+	RadioTemplate    = newTemplate(appRoot + "templates/gforms/radio.html")
 
 	emptyHTML = template.HTML("")
 )
@@ -18,9 +20,9 @@ var (
 func newTemplate(filepath string) *template.Template {
 	t := template.New(path.Base(filepath))
 	t = t.Funcs(template.FuncMap{
-		"renderField": RenderField,
-		"renderLabel": RenderLabel,
-		"renderError": RenderError,
+		"field":       RenderField,
+		"label":       RenderLabel,
+		"field_error": RenderError,
 	})
 	var err error
 	t, err = t.ParseFiles(filepath)
@@ -39,8 +41,9 @@ func RenderErrors(form Form) (template.HTML, error) {
 	fields := form.Fields()
 	s := ""
 	for name, e := range errors {
-		if field, ok := fields[name]; ok && field.Widget().IsHidden() {
-			s += `<div class="alert alert-error">` + e.Error() + `</div>`
+		field, ok := fields[name]
+		if name == "" || (ok && field.Widget().IsHidden()) {
+			s += `<div class="alert alert-error">` + e.Error() + `</div>` + "\n"
 		}
 	}
 	return template.HTML(s), nil

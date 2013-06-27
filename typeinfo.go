@@ -56,7 +56,7 @@ func (m *typeInfoMap) TypeInfo(typ reflect.Type) *typeInfo {
 		if f.PkgPath != "" || !f.Type.Implements(fieldType) {
 			continue
 		}
-		tinfo.fields = append(tinfo.fields, m.structFieldInfo(typ, &f))
+		tinfo.fields = append(tinfo.fields, m.newStructFieldInfo(typ, &f))
 	}
 
 	m.l.Lock()
@@ -66,7 +66,7 @@ func (m *typeInfoMap) TypeInfo(typ reflect.Type) *typeInfo {
 	return tinfo
 }
 
-func (m *typeInfoMap) structFieldInfo(typ reflect.Type, f *reflect.StructField) *fieldInfo {
+func (m *typeInfoMap) newStructFieldInfo(typ reflect.Type, f *reflect.StructField) *fieldInfo {
 	finfo := &fieldInfo{
 		idx:    f.Index,
 		constr: tconstrMap.Constructor(f.Type),
@@ -77,7 +77,7 @@ func (m *typeInfoMap) structFieldInfo(typ reflect.Type, f *reflect.StructField) 
 	if len(tokens) > 1 {
 		for _, flag := range tokens[1:] {
 			switch flag {
-			case "req":
+			case "required":
 				finfo.flags |= fReq
 			}
 		}
