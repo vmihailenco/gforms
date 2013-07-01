@@ -6,22 +6,40 @@ import (
 	"os"
 	"path"
 	"reflect"
+	"sync"
 )
 
-var (
-	WidgetTemplate   = newTemplate(rootDir() + "templates/gforms/widget.html")
-	CheckboxTemplate = newTemplate(rootDir() + "templates/gforms/checkbox.html")
-	RadioTemplate    = newTemplate(rootDir() + "templates/gforms/radio.html")
+type templatesMap struct {
+	L sync.RWMutex
+	M map[string]*template.Template
+}
 
-	emptyHTML = template.HTML("")
+var emptyHTML = template.HTML("")
+
+var templates = &templatesMap{
+	M: make(map[string]*template.Template),
+}
+
+var (
+	WidgetTemplatePath   = rootDir() + "templates/gforms/widget.html"
+	CheckboxTemplatePath = rootDir() + "templates/gforms/checkbox.html"
+	RadioTemplatePath    = rootDir() + "templates/gforms/radio.html"
 )
 
 func rootDir() string {
 	return os.Getenv("ROOT_DIR")
 }
 
-func newTemplate(filepath string) *template.Template {
-	t := template.New(path.Base(filepath))
+func getTemplate(filepath string) *template.Template {
+	templates.L.RLock()
+	t, ok := templates.M[filepath]
+	if ok {
+		templates.L.RUnlock()
+		return t
+	}
+	templates.L.RUnlock()
+
+	t = template.New(path.Base(filepath))
 	t = t.Funcs(template.FuncMap{
 		"field":       RenderField,
 		"label":       RenderLabel,
@@ -32,6 +50,11 @@ func newTemplate(filepath string) *template.Template {
 	if err != nil {
 		panic(err)
 	}
+
+	templates.L.Lock()
+	templates.M[filepath] = t
+	templates.L.Unlock()
+
 	return t
 }
 
@@ -71,12 +94,12 @@ func Render(field Field, attrs ...string) (template.HTML, error) {
 	case *HiddenWidget:
 		return RenderField(field, attrs)
 	case *CheckboxWidget:
-		t = CheckboxTemplate
+		t = getTemplate(CheckboxTemplatePath)
 	case *RadioWidget:
 		data.Radios = widget.Radios(attrs, field.(SingleValueField).StringValue())
-		t = RadioTemplate
+		t = getTemplate(RadioTemplatePath)
 	default:
-		t = WidgetTemplate
+		t = getTemplate(WidgetTemplatePath)
 	}
 
 	buf := &bytes.Buffer{}
